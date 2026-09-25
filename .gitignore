@@ -1,0 +1,10 @@
+.local/
+dist/
+/runivo-mcp
+/runivo-mcp.exe
+*.test
+coverage.out
+.env
+.env.*
+*.key
+*.pem

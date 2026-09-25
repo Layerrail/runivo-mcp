@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "runivo": {
+      "command": "/absolute/path/to/runivo-mcp",
+      "args": ["--profile", "assistant"]
+    }
+  }
+}

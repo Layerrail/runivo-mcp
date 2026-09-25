@@ -1,0 +1,9 @@
+.git
+.local
+dist
+.env
+.env.*
+*.key
+*.pem
+runivo-mcp
+runivo-mcp.exe
