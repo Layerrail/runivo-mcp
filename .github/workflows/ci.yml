@@ -43,7 +43,7 @@ jobs:
         env:
           RELEASE_TAG: ${{ github.ref_name }}
         run: python3 scripts/release.py --version "$RELEASE_TAG" --commit "$GITHUB_SHA"
-      - uses: actions/attest-build-provenance@v3
+      - uses: actions/attest-build-provenance@v4
         with:
           subject-path: dist/*/*.*
       - name: Publish release
