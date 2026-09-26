@@ -152,6 +152,40 @@ func TestMutationReceiptMatchesBodyAndReplayID(t *testing.T) {
 		t.Fatal(requests.Load())
 	}
 }
+func TestManagedMySQLCreationPreservesDraftAndBillingBoundary(t *testing.T) {
+	var requests atomic.Int32
+	cs := session(t, Options{AllowWrites: true}, func(w http.ResponseWriter, r *http.Request) {
+		requests.Add(1)
+		var body map[string]any
+		if err := json.NewDecoder(r.Body).Decode(&body); err != nil {
+			t.Error(err)
+		}
+		if r.Method != "POST" || r.URL.Path != "/api/v1/workspaces/"+workspaceID+"/services" {
+			t.Error("creation must only save a service", r.Method, r.URL.Path)
+		}
+		if body["name"] != "mysql-app" || body["kind"] != "mysql" || body["requestId"] != "mysql-request" || r.Header.Get("Idempotency-Key") != "mysql-request" {
+			t.Error("incorrect service or replay identity", body)
+		}
+		configuration, ok := body["configuration"].(map[string]any)
+		if !ok || configuration["plan"] != "mysql-starter" || configuration["databaseVersion"] != "8.4" || configuration["privateNetworking"] != true {
+			t.Error("MySQL configuration was lost", configuration)
+		}
+		if _, ok := body["deploy"]; ok {
+			t.Error("creation must not add deployment consent")
+		}
+		io.WriteString(w, `{"service":{"id":"`+serviceID+`","kind":"mysql","status":"draft"}}`)
+	})
+	result := call(t, cs, "create_service", map[string]any{
+		"name": "mysql-app", "kind": "mysql", "request_id": "mysql-request",
+		"configuration": map[string]any{"plan": "mysql-starter", "databaseVersion": "8.4", "privateNetworking": true},
+	})
+	if result.IsError || !strings.Contains(resultText(t, result), "draft") {
+		t.Fatal(resultText(t, result))
+	}
+	if requests.Load() != 1 {
+		t.Fatal("creation sent extra operations", requests.Load())
+	}
+}
 func TestIndependentExecutionAndSecretOptIns(t *testing.T) {
 	for _, options := range []Options{{AllowWrites: true}, {AllowWrites: true, AllowExec: true}, {AllowWrites: true, AllowSecrets: true}} {
 		cs := session(t, options, func(http.ResponseWriter, *http.Request) {})

@@ -52,7 +52,7 @@ func (a *app) writeTools() {
 	})
 	configuration := map[string]any{"type": "object", "description": "Service configuration from the catalog/API: repository, branch, runtime, plan, build/start command, region and related options. Backend validates fields, entitlements and paid-compute consent.", "additionalProperties": true}
 	serviceFields := map[string]string{"name": "name", "kind": "kind", "configuration": "configuration", "project_id": "projectId", "environment_id": "environmentId"}
-	servicePropsCreate := map[string]any{"name": text("Lowercase service name using letters, numbers and hyphens", 63), "kind": enum("Service type", "web", "static", "private", "worker", "cron", "postgres", "redis"), "configuration": configuration, "project_id": identifier("Optional project UUID; also provide environment_id"), "environment_id": identifier("Environment UUID belonging to project_id"), "request_id": requestKey()}
+	servicePropsCreate := map[string]any{"name": text("Lowercase service name using letters, numbers and hyphens", 63), "kind": enum("Service type", "web", "static", "private", "worker", "cron", "postgres", "mysql", "redis"), "configuration": configuration, "project_id": identifier("Optional project UUID; also provide environment_id"), "environment_id": identifier("Environment UUID belonging to project_id"), "request_id": requestKey()}
 	a.add("create_service", "Save a new service configuration. This does not deploy it or authorize charges. Use get_catalog and deploy_service separately.", object(servicePropsCreate, "name", "kind", "request_id"), true, false, true, func(ctx context.Context, p arguments) (any, error) {
 		return a.write(ctx, "POST", "services", p, copyArgs(p, serviceFields), true)
 	})
