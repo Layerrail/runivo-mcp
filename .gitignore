@@ -8,3 +8,6 @@ coverage.out
 .env.*
 *.key
 *.pem
+
+/openstead-mcp
+/openstead-mcp.exe

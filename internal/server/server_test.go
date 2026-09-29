@@ -11,7 +11,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/Layerrail/runivo-mcp/internal/api"
+	"github.com/Layerrail/openstead-mcp/internal/api"
 	"github.com/modelcontextprotocol/go-sdk/mcp"
 )
 
@@ -73,7 +73,7 @@ func TestProtocolDiscoveryAndReadOnlyBoundary(t *testing.T) {
 			t.Fatalf("unexpected write tool %s", tool.Name)
 		}
 	}
-	if len(names) < 25 || !names["runivo_get_logs"] || !names["runivo_get_billing"] || names["runivo_deploy_service"] {
+	if len(names) < 25 || !names["runivo_get_logs"] || !names["runivo_get_billing"] || !names["openstead_get_logs"] || names["openstead_deploy_service"] || names["runivo_deploy_service"] {
 		t.Fatal(names)
 	}
 	_, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: "runivo_deploy_service", Arguments: map[string]any{"service_id": serviceID, "request_id": "request-1"}})
@@ -81,7 +81,7 @@ func TestProtocolDiscoveryAndReadOnlyBoundary(t *testing.T) {
 		t.Fatal("unregistered write tool accepted")
 	}
 	resources, err := cs.ListResources(context.Background(), nil)
-	if err != nil || len(resources.Resources) != 2 {
+	if err != nil || len(resources.Resources) != 4 {
 		t.Fatal(resources, err)
 	}
 	prompts, err := cs.ListPrompts(context.Background(), nil)
@@ -304,5 +304,27 @@ func TestCancellationReachesAPI(t *testing.T) {
 	case <-cancelled:
 	case <-time.After(3 * time.Second):
 		t.Fatal("API ignored cancellation")
+	}
+}
+
+func TestOpensteadAndLegacyNamesShareWorkspaceBoundary(t *testing.T) {
+	cs := session(t, Options{}, func(w http.ResponseWriter, r *http.Request) {
+		if r.URL.Path != "/api/v1/workspaces/"+workspaceID {
+			t.Error(r.URL.Path)
+		}
+		io.WriteString(w, `{"workspace":{"id":"`+workspaceID+`"}}`)
+	})
+	for _, prefix := range []string{"openstead", "runivo"} {
+		result, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: prefix + "_get_workspace", Arguments: map[string]any{}})
+		if err != nil || result.IsError {
+			t.Fatal(result, err)
+		}
+		resource, err := cs.ReadResource(context.Background(), &mcp.ReadResourceParams{URI: prefix + "://workspace"})
+		if err != nil || resource.Contents[0].URI != prefix+"://workspace" {
+			t.Fatal(resource, err)
+		}
+		if _, err := cs.CallTool(context.Background(), &mcp.CallToolParams{Name: prefix + "_deploy_service", Arguments: map[string]any{"service_id": serviceID, "request_id": "fixture"}}); err == nil {
+			t.Fatal("read-only write boundary bypassed")
+		}
 	}
 }

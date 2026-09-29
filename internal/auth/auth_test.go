@@ -10,7 +10,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/Layerrail/runivo-mcp/internal/api"
+	"github.com/Layerrail/openstead-mcp/internal/api"
 )
 
 const workspace = "11111111-1111-4111-8111-111111111111"

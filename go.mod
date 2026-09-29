@@ -1,4 +1,4 @@
-module github.com/Layerrail/runivo-mcp
+module github.com/Layerrail/openstead-mcp
 
 go 1.27.0
 

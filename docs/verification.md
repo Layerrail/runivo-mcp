@@ -19,7 +19,7 @@ The live test caught a workspace-root route mismatch (a trailing slash that Djan
 
 ## Live stdio acceptance
 
-The compiled Windows server connected to the production Runivo API using a temporary one-hour key belonging to an existing verified workspace owner. A separate test client used actual stdin/stdout JSON-RPC and negotiated MCP `2025-11-25`.
+The compiled Windows server connected to the production Openstead API using a temporary one-hour key belonging to an existing verified workspace owner. A separate test client used actual stdin/stdout JSON-RPC and negotiated MCP `2025-11-25`.
 
 - All 34 default tools advertised read-only behavior; write/execution tools were absent.
 - Real identity, catalog, service pagination, service details, deployment history/state, logs, metrics, usage, USD billing and backup history returned through MCP.
@@ -30,7 +30,7 @@ The compiled Windows server connected to the production Runivo API using a tempo
 - A temporary free draft service was created, updated and deleted. No deployment or compute purchase was initiated.
 - A non-secret test marker was set through the encrypted-variable API, listed only as metadata with `value: null`, and deleted.
 - Temporary project/service fixtures were removed.
-- The temporary key was imported into an isolated Runivo CLI profile and the Windows OS keychain. MCP successfully reused that real CLI keychain credential.
+- The temporary key was imported into an isolated Openstead CLI profile and the Windows OS keychain. MCP successfully reused that real CLI keychain credential.
 - CLI logout revoked the key, removed its keychain/profile entry and deleted its token file. A still-running MCP server then returned HTTP 401 for that revoked key.
 
 ## Limits of this verification

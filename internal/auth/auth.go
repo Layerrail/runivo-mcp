@@ -13,7 +13,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/Layerrail/runivo-mcp/internal/api"
+	"github.com/Layerrail/openstead-mcp/internal/api"
 	"github.com/zalando/go-keyring"
 )
 
@@ -64,18 +64,18 @@ func resolve(o Options, lookup func(string, string) (string, error)) (Options, e
 			if err != nil {
 				return o, errors.New("cannot locate CLI configuration")
 			}
-			dir = filepath.Join(base, "runivo")
+			dir = DefaultDirectory(base)
 		}
 		raw, err := readFile(filepath.Join(dir, "config.json"), 1<<20)
 		if err != nil {
-			return o, errors.New("sign in with runivo login --read-only, or supply RUNIVO_API_KEY or --token-file")
+			return o, errors.New("sign in with openstead login --read-only, or supply OPENSTEAD_API_KEY or --token-file")
 		}
 		var saved struct {
 			Active   string             `json:"active"`
 			Profiles map[string]Profile `json:"profiles"`
 		}
 		if json.Unmarshal(raw, &saved) != nil {
-			return o, errors.New("invalid Runivo CLI configuration")
+			return o, errors.New("invalid Openstead CLI configuration")
 		}
 		name := o.Profile
 		if name == "" {
@@ -84,7 +84,7 @@ func resolve(o Options, lookup func(string, string) (string, error)) (Options, e
 		var exists bool
 		p, exists = saved.Profiles[name]
 		if !exists {
-			return o, errors.New("CLI profile was not found; sign in with runivo login first")
+			return o, errors.New("CLI profile was not found; sign in with openstead login first")
 		}
 		if o.APIURL == "" {
 			o.APIURL = p.APIURL
@@ -112,6 +112,7 @@ func resolve(o Options, lookup func(string, string) (string, error)) (Options, e
 			return o, errors.New("saved credentials cannot be used for a different API origin or workspace")
 		}
 		sum := sha256.Sum256([]byte(p.APIURL + "\n" + p.Workspace + "\n" + p.KeyID))
+		// Keep the stored service label compatible with existing CLI credentials.
 		token, err := lookup("Runivo CLI", hex.EncodeToString(sum[:]))
 		if err != nil {
 			return o, errors.New("CLI keychain credential unavailable; sign in again or use --token-file")
@@ -120,7 +121,7 @@ func resolve(o Options, lookup func(string, string) (string, error)) (Options, e
 	}
 	o.Token = strings.TrimSpace(o.Token)
 	if !strings.HasPrefix(o.Token, "rnv_") || len(o.Token) > 4096 || strings.ContainsAny(o.Token, "\r\n\t ") {
-		return o, errors.New("invalid Runivo API key format")
+		return o, errors.New("invalid Openstead API key format")
 	}
 	if o.Workspace != "" && !UUID.MatchString(o.Workspace) {
 		return o, errors.New("workspace must be a UUID")
@@ -134,16 +135,38 @@ func Verify(ctx context.Context, client *api.Client, o Options) (Identity, error
 		return identity, err
 	}
 	if !UUID.MatchString(identity.Workspace.ID) {
-		return identity, errors.New("Runivo returned an invalid workspace identity")
+		return identity, errors.New("Openstead returned an invalid workspace identity")
 	}
 	if o.Workspace != "" && o.Workspace != identity.Workspace.ID {
 		return identity, errors.New("API key belongs to a different workspace")
 	}
 	if identity.Scope != "read" && identity.Scope != "write" {
-		return identity, errors.New("Runivo returned an unknown API key scope")
+		return identity, errors.New("Openstead returned an unknown API key scope")
 	}
 	if o.AllowWrites && identity.Scope != "write" {
 		return identity, errors.New("write tools require a write-scoped API key")
 	}
 	return identity, nil
+}
+
+// Env prefers the Openstead spelling while preserving existing CI environments.
+// An explicitly empty Openstead value also overrides its legacy counterpart.
+func Env(suffix string) string {
+	if value, ok := os.LookupEnv("OPENSTEAD_" + suffix); ok {
+		return value
+	}
+	return os.Getenv("RUNIVO_" + suffix)
+}
+
+// DefaultDirectory keeps existing profiles and their origin-bound keychain entries usable.
+func DefaultDirectory(base string) string {
+	current := filepath.Join(base, "openstead")
+	legacy := filepath.Join(base, "runivo")
+	if _, err := os.Stat(filepath.Join(current, "config.json")); !errors.Is(err, os.ErrNotExist) {
+		return current
+	}
+	if _, err := os.Stat(filepath.Join(legacy, "config.json")); !errors.Is(err, os.ErrNotExist) {
+		return legacy
+	}
+	return current
 }

@@ -26,15 +26,15 @@ output.mkdir(parents=True, exist_ok=True)
 checksums = []
 for system in ('linux', 'darwin', 'windows'):
     for arch in ('amd64', 'arm64'):
-        name = 'runivo-mcp.exe' if system == 'windows' else 'runivo-mcp'
+        name = 'openstead-mcp.exe' if system == 'windows' else 'openstead-mcp'
         binary = output / f'{system}-{arch}' / name
         binary.parent.mkdir(exist_ok=True)
         env = dict(os.environ, GOOS=system, GOARCH=arch, CGO_ENABLED='0')
         subprocess.run([args.go, 'build', '-trimpath', '-buildvcs=false', '-ldflags',
             f'-s -w -X main.version={args.version} -X main.commit={args.commit}',
-            '-o', str(binary), './cmd/runivo-mcp'], cwd=root, env=env, check=True)
-        stem = f'runivo-mcp_{args.version}_{system}_{arch}'
-        files = {name: binary.read_bytes(), 'LICENSE': (root/'LICENSE').read_bytes(), 'README.md': (root/'README.md').read_bytes()}
+            '-o', str(binary), './cmd/openstead-mcp'], cwd=root, env=env, check=True)
+        stem = f'openstead-mcp_{args.version}_{system}_{arch}'
+        files = {name: binary.read_bytes(), 'LICENSE': (root/'LICENSE').read_bytes(), 'README.md': (root/'README.md').read_bytes(), 'assets/openstead-mark.svg': (root/'assets/openstead-mark.svg').read_bytes()}
         if system == 'windows':
             archive = output / (stem + '.zip')
             with zipfile.ZipFile(archive, 'w', compression=zipfile.ZIP_DEFLATED) as package:

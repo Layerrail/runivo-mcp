@@ -22,7 +22,7 @@ jobs:
       - run: go mod verify
       - run: go vet ./...
       - run: go test -race -count=1 ./...
-      - run: go build ./cmd/runivo-mcp
+      - run: go build ./cmd/openstead-mcp
       - name: Check formatting
         shell: bash
         run: test -z "$(gofmt -l cmd internal)"
@@ -50,4 +50,4 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
           RELEASE_TAG: ${{ github.ref_name }}
-        run: gh release create "$RELEASE_TAG" dist/"$RELEASE_TAG"/*.zip dist/"$RELEASE_TAG"/*.tar.gz dist/"$RELEASE_TAG"/checksums.txt --verify-tag --title "Runivo MCP $RELEASE_TAG" --notes-file CHANGELOG.md
+        run: gh release create "$RELEASE_TAG" dist/"$RELEASE_TAG"/*.zip dist/"$RELEASE_TAG"/*.tar.gz dist/"$RELEASE_TAG"/checksums.txt --verify-tag --title "Openstead MCP $RELEASE_TAG" --notes-file CHANGELOG.md

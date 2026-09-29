@@ -16,7 +16,7 @@ import (
 )
 
 func TestStdioProcess(t *testing.T) {
-	if os.Getenv("RUNIVO_MCP_TEST_CHILD") == "1" {
+	if os.Getenv("OPENSTEAD_MCP_TEST_CHILD") == "1" {
 		if err := run(context.Background(), nil); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
@@ -45,7 +45,7 @@ func TestStdioProcess(t *testing.T) {
 			command.Env = append(command.Env, entry)
 		}
 	}
-	command.Env = append(command.Env, "RUNIVO_MCP_TEST_CHILD=1", "RUNIVO_API_KEY=rnv_test_process", "RUNIVO_API_URL="+apiServer.URL)
+	command.Env = append(command.Env, "OPENSTEAD_MCP_TEST_CHILD=1", "OPENSTEAD_API_KEY=rnv_test_process", "OPENSTEAD_API_URL="+apiServer.URL)
 	ctx, cancel := context.WithTimeout(context.Background(), 15*time.Second)
 	defer cancel()
 	client := mcp.NewClient(&mcp.Implementation{Name: "process-test", Version: "1"}, nil)
@@ -54,7 +54,7 @@ func TestStdioProcess(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer session.Close()
-	result, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "runivo_list_services", Arguments: map[string]any{"limit": 1}})
+	result, err := session.CallTool(ctx, &mcp.CallToolParams{Name: "openstead_list_services", Arguments: map[string]any{"limit": 1}})
 	if err != nil || result.IsError {
 		t.Fatal(result, err)
 	}

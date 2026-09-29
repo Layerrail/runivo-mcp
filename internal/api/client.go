@@ -1,4 +1,4 @@
-// Package api communicates only with the Runivo control plane. It has no engine credentials.
+// Package api communicates only with the Openstead control plane. It has no engine credentials.
 package api
 
 import (
@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-const DefaultURL = "https://runivo-dashboard.vercel.app"
+const DefaultURL = "https://openstead-dashboard.vercel.app"
 const MaxResponse = 16 << 20
 
 type Error struct {
@@ -76,7 +76,7 @@ func (c *Client) Request(ctx context.Context, method, path string, body any, ide
 	}
 	req.Header.Set("Accept", "application/json")
 	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("User-Agent", "runivo-mcp/"+c.Version)
+	req.Header.Set("User-Agent", "openstead-mcp/"+c.Version)
 	if c.Token != "" {
 		req.Header.Set("Authorization", "Bearer "+c.Token)
 	}
@@ -88,7 +88,7 @@ func (c *Client) Request(ctx context.Context, method, path string, body any, ide
 		if ctx.Err() != nil {
 			return nil, ctx.Err()
 		}
-		return nil, errors.New("could not reach Runivo; check your connection and API URL")
+		return nil, errors.New("could not reach Openstead; check your connection and API URL")
 	}
 	if response.StatusCode >= 200 && response.StatusCode < 300 {
 		return response, nil
@@ -103,7 +103,7 @@ func (c *Client) Request(ctx context.Context, method, path string, body any, ide
 		} `json:"errors"`
 	}
 	_ = json.Unmarshal(raw, &payload)
-	e := &Error{Status: response.StatusCode, Code: payload.Error, RetryAfter: response.Header.Get("Retry-After"), RequestID: response.Header.Get("X-Request-ID"), Message: fmt.Sprintf("Runivo returned HTTP %d", response.StatusCode)}
+	e := &Error{Status: response.StatusCode, Code: payload.Error, RetryAfter: response.Header.Get("Retry-After"), RequestID: response.Header.Get("X-Request-ID"), Message: fmt.Sprintf("Openstead returned HTTP %d", response.StatusCode)}
 	if payload.Error != "" {
 		e.Message = payload.Error
 	} else if len(payload.Errors) > 0 {
@@ -111,7 +111,7 @@ func (c *Client) Request(ctx context.Context, method, path string, body any, ide
 		e.Code = payload.Errors[0].Code
 	}
 	if response.StatusCode >= 300 && response.StatusCode < 400 {
-		e.Message = "Runivo returned a redirect; credentials were not forwarded. Check your API URL"
+		e.Message = "Openstead returned a redirect; credentials were not forwarded. Check your API URL"
 	}
 	if c.Token != "" {
 		e.Message = strings.ReplaceAll(e.Message, c.Token, "[REDACTED]")
@@ -135,7 +135,7 @@ func (c *Client) Do(ctx context.Context, method, path string, body any, out any,
 		return nil
 	}
 	if err = json.Unmarshal(raw, out); err != nil {
-		return errors.New("Runivo returned an unexpected response format")
+		return errors.New("Openstead returned an unexpected response format")
 	}
 	return nil
 }

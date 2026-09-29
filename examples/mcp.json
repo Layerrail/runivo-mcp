@@ -1,7 +1,7 @@
 {
   "mcpServers": {
-    "runivo": {
-      "command": "/absolute/path/to/runivo-mcp",
+    "openstead": {
+      "command": "/absolute/path/to/openstead-mcp",
       "args": ["--profile", "assistant"]
     }
   }
